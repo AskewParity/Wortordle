@@ -9,7 +9,6 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
     print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
-    # Print New Line on Complete
     if iteration == total: 
         print('\n')
 
@@ -117,8 +116,10 @@ def result(guess) :
             session_info[letter[0]] = -2
         elif letter[1] == 0:
             session_info[letter[0]] = -3
-
+            
+    start = len(session_set)
     session_set = set_left(guess, word_set=session_set)
+    print(safe_log2(start/len(session_set)))
 
 #same as init perm but probably has to change
 def permutation(word) :
@@ -133,7 +134,7 @@ def permutation(word) :
                             arr.append(number_left(perm, session_set))
     arr = list(filter(lambda a: a != 0, arr))
     for i in range(len(arr)) :
-       arr[i] =  (-1 * safe_log2(arr[i]/len(words))) * (arr[i]/len(words))
+       arr[i] =  (safe_log2(len(session_set)/ arr[i])) * (arr[i]/len(session_set))
     return sum(arr)
 
 def init_permutations(word) :
@@ -148,7 +149,7 @@ def init_permutations(word) :
                             arr.append(number_left(perm))
     arr = list(filter(lambda a: a != 0, arr))
     for i in range(len(arr)) :
-       arr[i] =  (-1 * safe_log2(arr[i]/len(words))) * (arr[i]/len(words))
+       arr[i] =  (safe_log2(len(words)/ arr[i])) * (arr[i]/len(words))
     return sum(arr)
 
 
