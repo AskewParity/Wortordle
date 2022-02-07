@@ -1,8 +1,6 @@
-from mimetypes import guess_all_extensions
-from operator import le
-import os
+import random
 import math
-from re import X
+import time
 
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
@@ -83,7 +81,7 @@ def initialize() :
 def regen():
     arr = []
     for i, word in enumerate(session_set) :
-        printProgressBar(i + 1, len(session_set))
+        #printProgressBar(i + 1, len(session_set))
         arr.append((word, permutation(word)))
     return sorted(arr, key=lambda x : x[1], reverse=True)
 
@@ -116,10 +114,10 @@ def result(guess) :
             session_info[letter[0]] = -2
         elif letter[1] == 0:
             session_info[letter[0]] = -3
-            
+
     start = len(session_set)
     session_set = set_left(guess, word_set=session_set)
-    print(safe_log2(start/len(session_set)))
+    #print(safe_log2(start/len(session_set)))
 
 #same as init perm but probably has to change
 def permutation(word) :
@@ -214,9 +212,8 @@ def session() :
         print('Insert Result: ')
         guess = []
         for _ in range(5):
-            letter = []
-            letter.append(input('Letter\n'))
-            letter.append(input('MISS - 0\nMISPLACE - 1\nEXACT - 2\n'))
+            print('Letter, \nMISS - 0\nMISPLACE - 1\nEXACT - 2\ne.g. c2')
+            letter = input()
             guess.append((letter[0], int(letter[1])))
             print(guess)
         result(guess)
@@ -224,6 +221,62 @@ def session() :
         avalible_words = regen()
     print(avalible_words[0])
     
+def histogram() :
+    avg = 0
+    losses = 0
+    count = 0
+    hist = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    for _ in range(9999) :
+        printProgressBar(_ + 1, 9999)
+        try:
+            index = simulation() - 1
+            hist[index] = hist[index] + 1
+        except :
+            avg += len(hist)
+            losses += 1
+    print(hist)
+    for i in range(len(hist)) :
+        avg += (i + 1) * hist[i]
+        if i > 5 :
+            losses += hist[i]
+    print(avg / 15000)
+    print(losses)
+    print(losses / 50)
+
+def simulation() :
+    count = 0
+    global session_set 
+    session_set = words_into_memory()
+    avalible_words = []
+    with open('init.txt', 'r') as file:
+        conetent = file.readlines()
+        for line in conetent:
+            tuple = line.strip().split(' ')
+            avalible_words.append((tuple[0], tuple[1]))
+    avalible_words = sorted(avalible_words, key=lambda x: x[1], reverse=True)
+    choice = random.choice(avalible_words)[0]
+    while(len(avalible_words) > 1) :
+        chosen = avalible_words[0][0]
+        guess = []
+        for i in range(5) :
+            if chosen[i] == choice[i] :
+                guess.append((chosen[i], 2))
+            elif chosen[i] in choice :
+                guess.append((chosen[i], 1))
+            else :
+                guess.append((chosen[i], 0))
+        if chosen == choice :
+            return count + 1
+        result(guess)
+        
+        avalible_words = regen()
+
+        count += 1
+    if avalible_words[0][0] != choice :
+        return 50
+    return count + 1
 
 if __name__ == '__main__':
-    session()
+    curr = time.time()
+    histogram()
+    print(time.time() - curr)
