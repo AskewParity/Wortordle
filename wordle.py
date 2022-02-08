@@ -94,7 +94,7 @@ def regen():
     for i, word in enumerate(session_set) :
         #rintProgressBar(i + 1, len(session_set))
         arr.append((word, permutation(word), weights[word]))
-    return sorted(arr, key=lambda x : (x[1], -x[2]), reverse=True)
+    return sorted(arr, key=lambda x : x[1] + x[2], reverse=True)
 
 
 def valid_permutation(word) :
@@ -214,7 +214,7 @@ def session() :
         for line in conetent:
             tuple = line.strip().split(' ')
             avalible_words.append((tuple[0], float(tuple[1]), float(tuple[2])))
-    avalible_words = sorted(avalible_words, key=lambda x: (x[1], -x[2]), reverse=True)
+    avalible_words = sorted(avalible_words, key=lambda x: x[1] + x[2], reverse=True)
     
     while(len(avalible_words) > 1) :
         max = min(10, len(avalible_words))
@@ -238,8 +238,8 @@ def histogram() :
     losses = 0
     count = 0
     hist = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    for _ in range(15000) :
-        printProgressBar(_ + 1, 15000)
+    for _ in range(2000) :
+        printProgressBar(_ + 1, 2000)
         try:
             index = simulation() - 1
             hist[index] = hist[index] + 1
@@ -251,9 +251,9 @@ def histogram() :
         avg += (i + 1) * hist[i]
         if i > 5 :
             losses += hist[i]
-    print(avg / 15000)
+    print(avg / 2000)
     print(losses)
-    print(losses / 50)
+    print(losses / 20)
 
 def simulation() :
     count = 0
