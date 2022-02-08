@@ -1,3 +1,4 @@
+from os import openpty
 import random
 import math
 import time
@@ -23,6 +24,16 @@ def words_into_memory() :
             arr.add(relation[0])
     return arr
 
+def word_weights_into_memory() :
+    arr = {}
+    with open('shortweights.txt', 'r', encoding='UTF-8') as s_weights :
+        content = s_weights.readlines()
+        for line in content :
+            relation = line.strip().split(" ")
+            arr[relation[0]] = float(relation[1])
+    return arr
+
+weights = word_weights_into_memory()
 words = words_into_memory()
 session_set = words_into_memory()
 
@@ -81,9 +92,9 @@ def initialize() :
 def regen():
     arr = []
     for i, word in enumerate(session_set) :
-        #printProgressBar(i + 1, len(session_set))
-        arr.append((word, permutation(word)))
-    return sorted(arr, key=lambda x : x[1], reverse=True)
+        #rintProgressBar(i + 1, len(session_set))
+        arr.append((word, permutation(word), weights[word]))
+    return sorted(arr, key=lambda x : (x[1], -x[2]), reverse=True)
 
 
 def valid_permutation(word) :
@@ -198,24 +209,25 @@ def order_o_weights() :
 def session() :
     global session_set
     avalible_words = []
-    with open('init.txt', 'r') as file:
+    with open('init_w.txt', 'r') as file:
         conetent = file.readlines()
         for line in conetent:
             tuple = line.strip().split(' ')
-            avalible_words.append((tuple[0], tuple[1]))
-    avalible_words = sorted(avalible_words, key=lambda x: x[1], reverse=True)
+            avalible_words.append((tuple[0], float(tuple[1]), float(tuple[2])))
+    avalible_words = sorted(avalible_words, key=lambda x: (x[1], -x[2]), reverse=True)
     
     while(len(avalible_words) > 1) :
         max = min(10, len(avalible_words))
         for i in range(max) :
             print(avalible_words[i])
-        print('Insert Result: ')
         guess = []
-        for _ in range(5):
-            print('Letter, \nMISS - 0\nMISPLACE - 1\nEXACT - 2\ne.g. c2')
-            letter = input()
-            guess.append((letter[0], int(letter[1])))
-            print(guess)
+        word = input('Input word:\n')
+        values = input('Input values:\n')
+        for i in range(5) :
+            guess.append((word[i], int(values[i])))
+
+        print(guess)
+        
         result(guess)
         
         avalible_words = regen()
@@ -226,8 +238,8 @@ def histogram() :
     losses = 0
     count = 0
     hist = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    for _ in range(9999) :
-        printProgressBar(_ + 1, 9999)
+    for _ in range(15000) :
+        printProgressBar(_ + 1, 15000)
         try:
             index = simulation() - 1
             hist[index] = hist[index] + 1
@@ -275,6 +287,30 @@ def simulation() :
     if avalible_words[0][0] != choice :
         return 50
     return count + 1
+
+def redo_list():
+    weights = {}
+    init_l = {}
+    with open('shortweights.txt', 'r', encoding='UTF-8') as o_weights :
+        content = o_weights.readlines()
+        for line in content :
+            relation = line.strip().split(" ")
+            weights[relation[0]] = float(relation[1])
+
+    with open('init.txt', 'r', encoding='UTF-8') as processesed:
+        content = processesed.readlines()
+        for line in content :
+            relation = line.strip().split(" ")
+            init_l[relation[0]] = float(relation[1])
+        with open('init_w.txt', 'w', encoding='UTF-8') as new_pros:
+            for line in content :
+                word = line.split(" ")[0]
+                if word in weights :
+                    new_pros.write(f'{word} {init_l[word]} {weights[word]}\n')
+                else :
+                    new_pros.write(f'{word} {init_l[word]} {float(-1)}\n')
+    
+
 
 if __name__ == '__main__':
     curr = time.time()
