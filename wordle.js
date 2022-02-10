@@ -38,13 +38,14 @@ window.addEventListener("keydown", function (event) {
 
         } else if (session.curr_col < 4 && alph.includes(event.key.toLowerCase())) {
             // If valid character pressed updates mat and increments pointer location
-            session.curr_col += 1;
+            session.curr_col++;
             session.guesses[session.curr_row][session.curr_col] = [event.key.toLowerCase(), -1];
         }
     } else {
         if (event.key == 'Enter' && session.curr_col === 4 && session.curr_row < 6) {
+            session.next();
             session.curr_col = -1;
-            session.curr_row += 1;
+            session.curr_row++;
             session.numbers = false;
         } else if (event.key == 'Backspace' && session.curr_col > -1) {
 
@@ -56,7 +57,7 @@ window.addEventListener("keydown", function (event) {
 
         } else if (session.curr_col < 4 && num.includes(parseInt(event.key))) {
             // If valid character pressed updates mat and increments pointer location
-            session.curr_col += 1;
+            session.curr_col++;
             session.guesses[session.curr_row][session.curr_col] = [session.guesses[session.curr_row][session.curr_col][0], parseInt(event.key)];
         }
     }
@@ -155,6 +156,13 @@ class Session {
         }
     }
 
+    next() {
+        let guess = this.guesses[this.level];
+        this.result(guess);
+        this.best_words = this.regen();
+        this.level++;
+    }
+
     words_into_memory() {
         for (let i = 0; i < original_list.length; i++) {
             let reference = original_list[i];
@@ -167,15 +175,51 @@ class Session {
     }
 
     regen() {
-        //TODO
+        let arr = [];
+        this.word_set.forEach((word) => {
+            arr.push([word, this.perms(word), this.freq.get(word)]);
+        });
+        arr.sort((a, b) => (b[1] + b[2]) - (a[1] + a[2]));
+        return arr;
     }
 
     result(guess) {
-        //TODO
+        for(let i = 0;i < 5; i++) {
+            let letter = guess[i];
+            if (letter[1] == 2) {
+                this.session_info.set(letter[0], i);
+            } else if (letter[1] == 1) {
+                this.session_info.set(letter[0], -2);
+            } else if (letter[1] == 0) {
+                this.session_info.set(letter[0], -3);
+            }
+        }
+
+        this.word_set = this.set_left(guess)
     }
 
     perms(word) {
-        //TODO
+        let arr = []
+        for(let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                for (let k = 0; k < 3; k++) {
+                    for(let l = 0; l < 3; l++) {
+                        for (let m = 0; m < 3; m++) {
+                            let perm = [[word[0], i], [word[1], j], [word[2], k], [word[3], l], [word[4], m]];
+                            if (this.valid_perm(perm)) {
+                                arr.push(this.num_left(perm));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        arr = arr.filter(Number);
+        for(let i = 0; i < arr.length; i++) {
+            arr[i] = (this.safe_log2(this.word_set.size/arr[i])) * (arr[i] / this.word_set.size);
+        }
+        return arr.reduce((a, b) => a + b, 0);
     }
 
     valid_perm(word) {
@@ -189,13 +233,13 @@ class Session {
                 } else if (this.session_info.get(letter[0]) == -3 && letter[1] != 0) {
                     return false;
                 }
-            } 
+            }
 
             if (!map.has(letter[0])) {
                 map.set(letter[0], letter[1]);
-            } else if (set.get(letter[0]) == 0 && letter[1] != 0) {
+            } else if (map.get(letter[0]) == 0 && letter[1] != 0) {
                 return false;
-            } else if (set.get(letter[0]) != 0 && letter[1] == 0) {
+            } else if (map.get(letter[0]) != 0 && letter[1] == 0) {
                 return false;
             }
         });
@@ -206,16 +250,26 @@ class Session {
     set_left(guess) {
         let left = new Set();
         this.word_set.forEach(word => {
-            if(this.guess_valid(guess, word)) {
+            if (this.guess_valid(guess, word)) {
                 left.add(word);
             }
         });
-        return left
+        return left;
+    }
+
+    num_left(guess) {
+        let count = 0;
+        this.word_set.forEach(word => {
+            if (this.guess_valid(guess, word)) {
+                count++;
+            }
+        });
+        return count;
     }
 
     guess_valid(guess, word) {
-        for(let i = 0; i < guess.length; i++) {
-            letter = guess[i];
+        for (let i = 0; i < guess.length; i++) {
+            let letter = guess[i];
             if (letter[1] == 0 && word.includes(letter[0])) {
                 return false;
             } else if (letter[1] == 2 && letter[0] != word[i]) {
