@@ -98,7 +98,8 @@ function display() {
                 //reset color
                 ctx.fillStyle = '#000000';
                 //prints leter
-                ctx.fillText(session.guesses[i][j][0].toUpperCase(), center_displacement + size * j + buffer * (j + 2) + 6, size * (i + 1) + buffer * (i - 2) - 6);
+                ctx.textAlign = 'center';
+                ctx.fillText(session.guesses[i][j][0].toUpperCase(), center_displacement + size * j + buffer * (j + 4) + 4, size * (i + 1) + buffer * (i - 2) - 6);
             }
         }
     }
@@ -143,6 +144,20 @@ class Session {
         this.freq = new Map();
 
         //Holds all letter data
+        // TODO -> IMPLEMENT A 5 ARRAY FROR EACH LETTER
+        /*
+        TODO -> revise system later
+        -1 - Does not exist
+        0 - Indeterminatnt
+        1 - Exists but misplaced
+        2 - Exact
+        [
+            A: [2, 0, 0, 0, 0]      # A only exists in the 0 position, but may exist in others
+            B: [-1, 2, 1, 1, -1]    # B exists only in 1-3 positions, with a lock on 2
+            C: [1, -1, -1, -1, -1]  # TODO -> revise to fill 1s with 2s when possible
+            D: [1, 1, -1, -1, -1]   # D exists in 1 location, with results returning a 0 and a 1
+        ]
+        */
         this.session_info = new Map();
 
         this.words_into_memory();
