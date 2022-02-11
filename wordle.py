@@ -49,32 +49,32 @@ guess = [
 ]
 '''
 session_info = {
-    'a': -1,
-    'b': -1,
-    'c': -1,
-    'd': -1,
-    'e': -1,
-    'f': -1,
-    'g': -1,
-    'h': -1,
-    'i': -1,
-    'j': -1,
-    'k': -1,
-    'l': -1,
-    'm': -1,
-    'n': -1,
-    'o': -1,
-    'p': -1,
-    'q': -1,
-    'r': -1,
-    's': -1,
-    't': -1,
-    'u': -1,
-    'v': -1,
-    'w': -1,
-    'x': -1,
-    'y': -1,
-    'z': -1
+    'a': [-1, -1, -1, -1, -1],
+    'b': [-1, -1, -1, -1, -1],
+    'c': [-1, -1, -1, -1, -1],
+    'e': [-1, -1, -1, -1, -1],
+    'd': [-1, -1, -1, -1, -1],
+    'f': [-1, -1, -1, -1, -1],
+    'g': [-1, -1, -1, -1, -1],
+    'h': [-1, -1, -1, -1, -1],
+    'i': [-1, -1, -1, -1, -1],
+    'j': [-1, -1, -1, -1, -1],
+    'k': [-1, -1, -1, -1, -1],
+    'l': [-1, -1, -1, -1, -1],
+    'm': [-1, -1, -1, -1, -1],
+    'n': [-1, -1, -1, -1, -1],
+    'o': [-1, -1, -1, -1, -1],
+    'p': [-1, -1, -1, -1, -1],
+    'q': [-1, -1, -1, -1, -1],
+    'r': [-1, -1, -1, -1, -1],
+    's': [-1, -1, -1, -1, -1],
+    't': [-1, -1, -1, -1, -1],
+    'u': [-1, -1, -1, -1, -1],
+    'v': [-1, -1, -1, -1, -1],
+    'w': [-1, -1, -1, -1, -1],
+    'x': [-1, -1, -1, -1, -1],
+    'y': [-1, -1, -1, -1, -1],
+    'z': [-1, -1, -1, -1, -1]
 }
 
 
@@ -99,13 +99,13 @@ def regen():
 
 def valid_permutation(word) :
     set = {}
-    for letter in word :
-        if session_info[letter[0]] != -1 :
-            if session_info[letter[0]] > -1 and letter[1] == 0:
+    for i, letter in enumerate(word) :
+        if session_info[letter[0]][i] != -1 :
+            if session_info[letter[0]][i] == 2 and letter[1] != 2:
                 return False
-            elif session_info[letter[0]] == -2 and letter[1] == 0:
+            elif session_info[letter[0]][i] == -2 and letter[1] == 0:
                 return False
-            elif session_info[letter[0]] == -3 and letter[1] != 0:
+            elif session_info[letter[0]][i] == -3 and letter[1] != 0:
                 return False
         if letter[0] not in set :
             set[letter[0]] = letter[1]
@@ -120,11 +120,14 @@ def result(guess) :
     global session_set
     for i, letter in enumerate(guess) :
         if letter[1] == 2:
-            session_info[letter[0]] = i
+            session_info[letter[0]][i] = 2
         elif letter[1] == 1:
-            session_info[letter[0]] = -2
+            for val in session_info[letter[0]]:
+                if val != -3 and val < 0 :
+                    val = -2
+            session_info[letter[0]][i] = -3
         elif letter[1] == 0:
-            session_info[letter[0]] = -3
+            session_info[letter[0]][i] = -3
 
     start = len(session_set)
     session_set = set_left(guess, word_set=session_set)
@@ -164,21 +167,21 @@ def init_permutations(word) :
 
 def with_guess_valid(guess, word) :
     for i, letter in enumerate(guess):
-        if letter[1] == 0 and letter[0] in word :
+        if (letter[1] == 0 or session_info[letter[0]][i] == 0)  and letter[0] == word[i] :
             return False
         elif letter[1] == 2 and letter[0] != word[i] :
             return False
-        elif letter[1] == 1 and (letter[0] not in word or word[i] == letter[0]):
+        elif letter[1] == 1 and letter[0] not in word:
             return False
     return True
 
 def valid_word(guess, word) :
     for i, letter in enumerate(guess):
-        if letter[1] == 0 and letter[0] in word :
+        if (letter[1] == 0 or session_info[letter[0]][i] == 0)  and letter[0] == word[i] :
             return False
         elif letter[1] == 2 and letter[0] != word[i] :
             return False
-        elif letter[1] == 1 and letter[0] not in word :
+        elif letter[1] == 1 and letter[0] not in word:
             return False
     return True
 
@@ -205,6 +208,8 @@ def order_o_weights() :
             if float(relation[1]) > 0 :
                 arr.append((relation[0], float(relation[1])))
     return sorted(arr, key=lambda l : l[1])
+
+
 
 def session() :
     global session_set
@@ -314,5 +319,5 @@ def redo_list():
 
 if __name__ == '__main__':
     curr = time.time()
-    histogram()
+    initialize()
     print(time.time() - curr)
