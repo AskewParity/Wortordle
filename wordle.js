@@ -87,7 +87,7 @@ function display() {
         //size of margin between ^
         let buffer = 10;
         // arbitrary number formatting the drawing to center
-        let center_displacement = 158
+        let center_displacement = 50
         for (let i = 0; i < 6; i++) {
             for (let j = 0; j < 5; j++) {
                 // Color of wordle
@@ -108,8 +108,10 @@ function display() {
 }
 
 function list_to_html(array) {
+    //table header
     string = '<table class="table"><thead><th scope="col">WORD</th><th scope="col">VALUE</th><th scope="col">FREQUENCY</th></thead><tbody>';
 
+    //adds values
     for (let i = 0; i < array.length; i++) 
         string += `<tr><td>${array[i][0]}</td><td>${array[i][1].toPrecision(4)}</td><td>${array[i][2].toPrecision(4)}</td></tr>`;
     
@@ -144,53 +146,74 @@ class Session {
         this.word_set = new Set();
         this.freq = new Map();
 
-        //Holds all letter data
-        // TODO -> IMPLEMENT A 5 ARRAY FROR EACH LETTER
+        //
         /*
-        TODO -> revise system later
-        -1 - Does not exist
-        0 - Indeterminatnt
+        Holds all letter data   
+        -1 - Indeterminant
+        0 - Does not exist
         1 - Exists but misplaced
         2 - Exact
         [
-            A: [2, 0, 0, 0, 0]      # A only exists in the 0 position, but may exist in others
-            B: [-1, 2, 1, 1, -1]    # B exists only in 1-3 positions, with a lock on 2
-            C: [1, -1, -1, -1, -1]  # TODO -> revise to fill 1s with 2s when possible
-            D: [1, 1, -1, -1, -1]   # D exists in 1 location, with results returning a 0 and a 1
+            A: [2, -1, -1, -1, -1]      # A only exists in the 0 position, but may exist in others
+            B: [0, 2, 1, 1, 0]    # B exists only in 1-3 positions, with a lock on 2
+            C: [1, 0, 0, 0, 0]  # TODO -> revise to fill 1s with 2s when possible (not practically possible)
+            D: [1, 1, 0, 1, 1]   # D a letter is misplaced at index 2, so it could be anywhere besides index 2
         ]
         */
         this.session_info = new Map();
+
+        //Holds all known letters in the word (MAX 5)
         this.letters = new Set();
 
 
-
+        //puts original list into session_info
         this.words_into_memory();
 
+        /*
+        pushes guesses with 
+        [
+            [[' ', -1], [' ', -1], [' ', -1], [' ', -1], [' ', -1]],
+            etc.
+        ]
+        */
         for (let i = 0; i < 6; i++) 
             this.guesses.push(new Array(5).fill([' ', -1]));
 
+        /*
+        pushes session info with ^^
+        [
+            A: [-1, -1, -1, -1, -1],
+            etc.
+        ]
+        */
         for (let i = 0; i < alph.length; i++) 
             this.session_info.set(alph[i], new Array(5).fill(-1));
     }
 
     next() {
+        //takes guess from guesses array
         let guess = this.guesses[this.level];
+        //updates session_info
         this.result(guess);
+        //recalculates best words
         this.best_words = this.regen();
+        //moves on to next line
         this.level++;
     }
 
     words_into_memory() {
+        //pushes information from best words to approprate structures
         for (let i = 0; i < original_list.length; i++) {
             let reference = original_list[i];
             this.word_set.add(reference[0]);
             this.best_words.push([reference[0], parseFloat(reference[1]), parseFloat(reference[2])]);
             this.freq.set(reference[0], parseFloat(reference[2]));
         }
-        //sorts in reverse
+        //sorts in reverse of value + freq
         this.best_words.sort((a, b) => (b[1] + b[2]) - (a[1] + a[2]));
     }
 
+    //any avalible word's value is recalculated based on avalible words
     regen() {
         let arr = [];
         this.word_set.forEach((word) => {
@@ -200,23 +223,30 @@ class Session {
         return arr;
     }
 
+    //restructures session_info
     result(guess) {
         for (let i = 0; i < 5; i++) {
+            //letter of the guess ['A', 0]
             let letter = guess[i];
+            //session info of the letter
             let s_info = this.session_info.get(letter[0]);
+
+            //if exact
             if (letter[1] == 2) {
                 this.letters.add(letter[0]);
                 s_info[i] = 2;
+            //if misplaced
             } else if (letter[1] == 1) {
                 this.letters.add(letter[0]);
 
+                //possible locations at indeterminant areas
                 for (let j = 0; j < 5; j++) 
                     if (s_info[j] <= 0) 
                         s_info[j] = 1;
-
+                //except itself
                 s_info[i] = 0;
             } else if (letter[1] == 0) {
-
+                //checks if there are determinant values after this 0
                 let alone = true;
 
                 for (let j = i + 1; j < 5; j++) 
@@ -224,27 +254,32 @@ class Session {
                         alone = false;
 
                 if (alone) {
+                    // If not, changes all indeterminant values to impossible
                     for (let j = 0; j < 5; j++) {
                         if (s_info[j] < 0) {
                             s_info[j] = 0;
                         }
                     }
-                } else {
-                    s_info[i] = 0;
-                }
+                } 
+                //and itself
+                s_info[i] = 0;
             }
         }
+
         this.word_set = this.set_left(guess)
     }
 
     perms(word) {
+        // array holds the value of each word
         let arr = []
+        //all permutations
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 for (let k = 0; k < 3; k++) {
                     for (let l = 0; l < 3; l++) {
                         for (let m = 0; m < 3; m++) {
                             let perm = [[word[0], i], [word[1], j], [word[2], k], [word[3], l], [word[4], m]];
+                            //if the permutation is possible, it calculates its value
                             if (this.valid_perm(perm)) 
                                 arr.push(this.num_left(perm));
                         }
@@ -252,21 +287,28 @@ class Session {
                 }
             }
         }
-
+        //filters out 0s
         arr = arr.filter(Number);
 
+        //multiplies and sums up the value proportional to its probability
         for (let i = 0; i < arr.length; i++) 
-            arr[i] = (this.safe_log2(this.word_set.size / arr[i])) * (arr[i] / this.word_set.size);
+            arr[i] = (this.safe_log2(this.word_set.size / arr[i])) * (arr[i] / this.word_set.size) / arr.length;
+        
     
         return arr.reduce((a, b) => a + b, 0);
     }
 
+    //checks if the permutation is possible
     valid_perm(word) {
         let map = new Map();
         for (let i = 0; i < 5; i++) {
+            //letter of the word ['A', 0]
             let letter = word[i];
+            //session info of the letter
             let s_info = this.session_info.get(letter[0]);
+
             if (s_info != -1) {
+                //checks if value is already determined
                 if (s_info == 2 && letter[1] != 2) 
                     return false;
                 else if (s_info == 1 && letter[1] == 0) 
@@ -275,6 +317,7 @@ class Session {
                     return false;
             }
 
+            //checks if the word itself makes sense (most perms not plausible)
             if (!map.has(letter[0])) 
                 map.set(letter[0], letter[1]);
             else if (map.get(letter[0]) == 0 && letter[1] != 0) 
@@ -286,6 +329,7 @@ class Session {
         return true;
     }
 
+    //returns all words that abide by new rules from session info
     set_left(guess) {
         let left = new Set();
         this.word_set.forEach(word => {
@@ -295,6 +339,7 @@ class Session {
         return left;
     }
 
+    //returns the count of words that could come after a permutation
     num_left(guess) {
         let count = 0;
         this.word_set.forEach(word => {
@@ -304,9 +349,10 @@ class Session {
         return count;
     }
 
+    //checks rules
     parse_through_helper(guess, word) {
         let has_all = true;
-
+        //checks if word has all known letters
         this.letters.forEach(value => {
             if (!word.includes(value)) 
                 has_all = false;
@@ -317,28 +363,33 @@ class Session {
         
 
         for (let i = 0; i < 5; i++) {
+            //check if exact matches are maintained
             if (guess[i][1] == 2 && word[i] != guess[i][0]) 
                 return false;
-            
+            //check if the word contains a letter which is non-existant
             if (this.session_info.get(word[i])[i] == 0) 
                 return false
         }
         return true;
     }
 
+    //checks if the word follows a permutation
     guess_valid(guess, word) {
-        for (let i = 0; i < guess.length; i++) {
-            let letter = guess[i];
-            if (letter[1] == 0 && word.includes(letter[0])) 
+        for (let i = 0; i < 5; i++) {
+            //only 1 if statement because all others are checked with removing words 
+            //checks if a ruled out letter exists in the word
+            if (guess[i][1] == 0 && word.includes(guess[i][0])) 
                 return false;
         }
         return true;
     }
 
+    //no undefined logs
     safe_log2(x) {
         return x > 0 ? Math.log2(x) : 0
     }
 
+    //returns n best words to choose from
     get_top_n(n) {
         return this.best_words.slice(0, n);
     }
