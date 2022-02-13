@@ -292,10 +292,10 @@ class Session {
 
         //multiplies and sums up the value proportional to its probability
         for (let i = 0; i < arr.length; i++) 
-            arr[i] = (this.safe_log2(this.word_set.size / arr[i])) * (arr[i] / this.word_set.size) / arr.length;
+            arr[i] = (this.safe_log2(this.word_set.size / arr[i])) * (arr[i] / this.word_set.size);
         
     
-        return arr.reduce((a, b) => a + b, 0);
+        return arr.reduce((a, b) => a + b, 0) / arr.length;
     }
 
     //checks if the permutation is possible

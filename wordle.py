@@ -1,5 +1,4 @@
-from glob import glob
-from os import openpty
+import datetime
 import random
 import math
 import time
@@ -14,7 +13,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 
 
 #Yee Yee
-O_WEIGHTS = 'shortweights.txt'
+O_WEIGHTS = 'total_list.txt'
 
 def words_into_memory() :
     arr = set()
@@ -50,32 +49,32 @@ guess = [
 ]
 '''
 session_info = {
-    'a': [-1, -1, -1, -1, -1],
-    'b': [-1, -1, -1, -1, -1],
-    'c': [-1, -1, -1, -1, -1],
-    'd': [-1, -1, -1, -1, -1],
-    'e': [-1, -1, -1, -1, -1],
-    'f': [-1, -1, -1, -1, -1],
-    'g': [-1, -1, -1, -1, -1],
-    'h': [-1, -1, -1, -1, -1],
-    'i': [-1, -1, -1, -1, -1],
-    'j': [-1, -1, -1, -1, -1],
-    'k': [-1, -1, -1, -1, -1],
-    'l': [-1, -1, -1, -1, -1],
-    'm': [-1, -1, -1, -1, -1],
-    'n': [-1, -1, -1, -1, -1],
-    'o': [-1, -1, -1, -1, -1],
-    'p': [-1, -1, -1, -1, -1],
-    'q': [-1, -1, -1, -1, -1],
-    'r': [-1, -1, -1, -1, -1],
-    's': [-1, -1, -1, -1, -1],
-    't': [-1, -1, -1, -1, -1],
-    'u': [-1, -1, -1, -1, -1],
-    'v': [-1, -1, -1, -1, -1],
-    'w': [-1, -1, -1, -1, -1],
-    'x': [-1, -1, -1, -1, -1],
-    'y': [-1, -1, -1, -1, -1],
-    'z': [-1, -1, -1, -1, -1]
+    'a': -1,
+    'b': -1,
+    'c': -1,
+    'd': -1,
+    'e': -1,
+    'f': -1,
+    'g': -1,
+    'h': -1,
+    'i': -1,
+    'j': -1,
+    'k': -1,
+    'l': -1,
+    'm': -1,
+    'n': -1,
+    'o': -1,
+    'p': -1,
+    'q': -1,
+    'r': -1,
+    's': -1,
+    't': -1,
+    'u': -1,
+    'v': -1,
+    'w': -1,
+    'x': -1,
+    'y': -1,
+    'z': -1
 }
 
 
@@ -85,29 +84,29 @@ def safe_log2(x) :
 
 def initialize() :
     #temporary for testing I know which thing is the best right now
+    t = time.time()
     with open('test.txt', 'w', encoding='UTF-8') as file :
         for i, word in enumerate(words) :
-            printProgressBar(i, len(words), prefix="Finding the best word")
+            printProgressBar(i, len(words), prefix="Finding the best word", suffix=f'{i + 1}/{len(words)} eta: {datetime.timedelta(seconds=round((len(words) - i) * (time.time() - t) / (i + 1)))}')
             file.write(f'{word} {init_permutations(word)}\n')
 
 def regen():
     arr = []
     for i, word in enumerate(session_set) :
-        #printProgressBar(i + 1, len(session_set))
+        #rintProgressBar(i + 1, len(session_set))
         arr.append((word, permutation(word), weights[word]))
     return sorted(arr, key=lambda x : x[1] + x[2], reverse=True)
 
 
 def valid_permutation(word) :
     set = {}
-    for i, letter in enumerate(word) :
-        sess_in = session_info[letter[0]][i]
-        if sess_in != -1 :
-            if sess_in == 2 and letter[1] != 2:
+    for letter in word :
+        if session_info[letter[0]] != -1 :
+            if session_info[letter[0]] > -1 and letter[1] == 0:
                 return False
-            elif sess_in == -2 and letter[1] == 0:
+            elif session_info[letter[0]] == -2 and letter[1] == 0:
                 return False
-            elif sess_in == -3 and letter[1] != 0:
+            elif session_info[letter[0]] == -3 and letter[1] != 0:
                 return False
         if letter[0] not in set :
             set[letter[0]] = letter[1]
@@ -122,23 +121,12 @@ def result(guess) :
     global session_set
     for i, letter in enumerate(guess) :
         if letter[1] == 2:
-            session_info[letter[0]][i] = 2
+            session_info[letter[0]] = i
         elif letter[1] == 1:
-            for index in range(5) :
-                if session_info[letter[0]][index] != -3 and session_info[letter[0]][index] < 0 :
-                    session_info[letter[0]][index] = -2
-            session_info[letter[0]][i] = -3
+            session_info[letter[0]] = -2
         elif letter[1] == 0:
-            alone = True
-            for index in range(3 - i) :
-                if index != i and guess[index + i + 1][0] == letter[0] and guess[index + i + 1][1] != 0:
-                    alone = False
-            if alone :
-                for index in range(5) :
-                    if session_info[letter[0]][index] < 0 and session_info[letter[0]][index] != -2 :
-                        session_info[letter[0]][index] = -3
-            else :
-                session_info[letter[0]][i] = -3  
+            session_info[letter[0]] = -3
+
     start = len(session_set)
     session_set = set_left(guess, word_set=session_set)
     #print(safe_log2(start/len(session_set)))
@@ -171,26 +159,27 @@ def init_permutations(word) :
                             arr.append(number_left(perm))
     arr = list(filter(lambda a: a != 0, arr))
     for i in range(len(arr)) :
-       arr[i] =  math.root((safe_log2(len(words)/ arr[i]))) * (arr[i]/len(words))
-    return sum(arr) // len(arr)
+       arr[i] =  (safe_log2(len(words)/ arr[i])) * (arr[i]/len(words)) 
+    return sum(arr) 
 
 
 def with_guess_valid(guess, word) :
-    for i, letter in enumerate(word):
-        val = session_info[word[i]][i]
-        if guess[i][1] == 2 and word[i] != guess[i][0] :
+    for i, letter in enumerate(guess):
+        if letter[1] == 0 and letter[0] in word :
             return False
-        if val == -3:
+        elif letter[1] == 2 and letter[0] != word[i] :
+            return False
+        elif letter[1] == 1 and (letter[0] not in word or word[i] == letter[0]):
             return False
     return True
 
 def valid_word(guess, word) :
     for i, letter in enumerate(guess):
-        if letter[1] == 1 and letter[0] not in word:
-            return False
-        elif letter[1] == 0  and letter[0] in word:
+        if letter[1] == 0 and letter[0] in word :
             return False
         elif letter[1] == 2 and letter[0] != word[i] :
+            return False
+        elif letter[1] == 1 and letter[0] not in word :
             return False
     return True
 
@@ -218,10 +207,7 @@ def order_o_weights() :
                 arr.append((relation[0], float(relation[1])))
     return sorted(arr, key=lambda l : l[1])
 
-
-
 def session() :
-    global session_info
     global session_set
     avalible_words = []
     with open('init_w.txt', 'r') as file:
@@ -244,91 +230,56 @@ def session() :
         print(guess)
         
         result(guess)
+        
         avalible_words = regen()
     print(avalible_words[0])
     
-def histogram(n) :
-    global session_info
+def histogram() :
     avg = 0
     losses = 0
+    count = 0
     hist = [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    for _ in range(n) :
-        printProgressBar(_ + 1, n)
+    for _ in range(2000) :
+        printProgressBar(_ + 1, 2000)
         try:
             index = simulation() - 1
             hist[index] = hist[index] + 1
-        except Exception as e:
-            print(e)
+        except :
             avg += len(hist)
             losses += 1
-        session_info = {
-    'a': [-1, -1, -1, -1, -1],
-    'b': [-1, -1, -1, -1, -1],
-    'c': [-1, -1, -1, -1, -1],
-    'd': [-1, -1, -1, -1, -1],
-    'e': [-1, -1, -1, -1, -1],
-    'f': [-1, -1, -1, -1, -1],
-    'g': [-1, -1, -1, -1, -1],
-    'h': [-1, -1, -1, -1, -1],
-    'i': [-1, -1, -1, -1, -1],
-    'j': [-1, -1, -1, -1, -1],
-    'k': [-1, -1, -1, -1, -1],
-    'l': [-1, -1, -1, -1, -1],
-    'm': [-1, -1, -1, -1, -1],
-    'n': [-1, -1, -1, -1, -1],
-    'o': [-1, -1, -1, -1, -1],
-    'p': [-1, -1, -1, -1, -1],
-    'q': [-1, -1, -1, -1, -1],
-    'r': [-1, -1, -1, -1, -1],
-    's': [-1, -1, -1, -1, -1],
-    't': [-1, -1, -1, -1, -1],
-    'u': [-1, -1, -1, -1, -1],
-    'v': [-1, -1, -1, -1, -1],
-    'w': [-1, -1, -1, -1, -1],
-    'x': [-1, -1, -1, -1, -1],
-    'y': [-1, -1, -1, -1, -1],
-    'z': [-1, -1, -1, -1, -1]
-}
     print(hist)
     for i in range(len(hist)) :
         avg += (i + 1) * hist[i]
         if i > 5 :
             losses += hist[i]
-    print(avg / n)
+    print(avg / 2000)
     print(losses)
-    print(losses * 100 / n)
+    print(losses / 20)
 
 def simulation() :
-    
     count = 0
-    global session_set
+    global session_set 
     session_set = words_into_memory()
     avalible_words = []
-    with open('init_w.txt', 'r') as file:
+    with open('init.txt', 'r') as file:
         conetent = file.readlines()
         for line in conetent:
             tuple = line.strip().split(' ')
-            avalible_words.append((tuple[0], float(tuple[1]), float(tuple[2])))
-    avalible_words = sorted(avalible_words, key=lambda x: x[1] + x[2], reverse=True)
+            avalible_words.append((tuple[0], tuple[1]))
+    avalible_words = sorted(avalible_words, key=lambda x: x[1], reverse=True)
     choice = random.choice(avalible_words)[0]
-    print(choice)
     while(len(avalible_words) > 1) :
         chosen = avalible_words[0][0]
         guess = []
-        temp = choice
         for i in range(5) :
-            if chosen[i] == temp[i] :
+            if chosen[i] == choice[i] :
                 guess.append((chosen[i], 2))
-                temp = temp[:i] + "!" + temp[i + 1:]
-            elif chosen[i] in temp :
+            elif chosen[i] in choice :
                 guess.append((chosen[i], 1))
             else :
                 guess.append((chosen[i], 0))
-        if count > 10 :
-            return count
         if chosen == choice :
             return count + 1
-        
         result(guess)
         
         avalible_words = regen()
@@ -364,5 +315,5 @@ def redo_list():
 
 if __name__ == '__main__':
     curr = time.time()
-    histogram(100)
+    initialize()
     print(time.time() - curr)
