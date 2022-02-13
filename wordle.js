@@ -9,10 +9,10 @@ const colors = ['#ffffff', '#888888', '#b59f3b', '#538d4e'];
 
 document.addEventListener("DOMContentLoaded", () => {
     var session = new Session();
-    setup()
-    display()
+    setup();
+    display();
 
-
+    simluation();
     /* document.getElementById('maze-submit').addEventListener('click', () => {
         setup();
     }); */
@@ -73,6 +73,33 @@ function setup() {
     session = new Session();
 }
 
+function simluation() {
+    let arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    for(let i = 0; i < 100; i++) {
+        console.log(i);
+        let chosen = original_list[Math.floor(Math.random() * original_list.length)][0];
+        session = new Session();
+        let choice = '';
+        let count = 0;
+        while (choice != chosen) {
+            choice = session.best_words[0][0];
+            let guess = [];
+            for (let j = 0; j < 5; j++) {
+                if (choice[j] == chosen[j]) {
+                    guess.push([choice[j], 2]);
+                } else if (chosen.includes(choice[j])) {
+                    guess.push([choice[j], 1]);
+                } else {
+                    guess.push([choice[j], 0]);
+                }
+            }
+            session.guesses[session.level] = guess;
+            session.next();
+        }
+    }
+    console.log(arr);
+}
+
 function display() {
     var canvas = document.getElementById('input-field');
     if (canvas.getContext) {
@@ -112,9 +139,9 @@ function list_to_html(array) {
     string = '<table class="table"><thead><th scope="col">WORD</th><th scope="col">VALUE</th></thead><tbody>';
 
     //adds values
-    for (let i = 0; i < array.length; i++) 
+    for (let i = 0; i < array.length; i++)
         string += `<tr><td>${array[i][0]}</td><td>${array[i][1].toPrecision(4)}</td></tr>`;
-    
+
     string += '</tbody></table>';
     return string;
 }
@@ -176,7 +203,7 @@ class Session {
             etc.
         ]
         */
-        for (let i = 0; i < 6; i++) 
+        for (let i = 0; i < 6; i++)
             this.guesses.push(new Array(5).fill([' ', -1]));
 
         /*
@@ -186,7 +213,7 @@ class Session {
             etc.
         ]
         */
-        for (let i = 0; i < alph.length; i++) 
+        for (let i = 0; i < alph.length; i++)
             this.session_info.set(alph[i], new Array(5).fill(-1));
     }
 
@@ -235,13 +262,13 @@ class Session {
             if (letter[1] == 2) {
                 this.letters.add(letter[0]);
                 s_info[i] = 2;
-            //if misplaced
+                //if misplaced
             } else if (letter[1] == 1) {
                 this.letters.add(letter[0]);
 
                 //possible locations at indeterminant areas
-                for (let j = 0; j < 5; j++) 
-                    if (s_info[j] <= 0) 
+                for (let j = 0; j < 5; j++)
+                    if (s_info[j] <= 0)
                         s_info[j] = 1;
                 //except itself
                 s_info[i] = 0;
@@ -249,8 +276,8 @@ class Session {
                 //checks if there are determinant values after this 0
                 let alone = true;
 
-                for (let j = i + 1; j < 5; j++) 
-                    if (guess[j][0] == letter[0] && guess[j][1] != 0) 
+                for (let j = i + 1; j < 5; j++)
+                    if (guess[j][0] == letter[0] && guess[j][1] != 0)
                         alone = false;
 
                 if (alone) {
@@ -260,7 +287,7 @@ class Session {
                             s_info[j] = 0;
                         }
                     }
-                } 
+                }
                 //and itself
                 s_info[i] = 0;
             }
@@ -280,7 +307,7 @@ class Session {
                         for (let m = 0; m < 3; m++) {
                             let perm = [[word[0], i], [word[1], j], [word[2], k], [word[3], l], [word[4], m]];
                             //if the permutation is possible, it calculates its value
-                            if (this.valid_perm(perm)) 
+                            if (this.valid_perm(perm))
                                 arr.push(this.num_left(perm));
                         }
                     }
@@ -291,9 +318,9 @@ class Session {
         arr = arr.filter(Number);
 
         //multiplies and sums up the value proportional to its probability
-        for (let i = 0; i < arr.length; i++) 
+        for (let i = 0; i < arr.length; i++)
             arr[i] = (this.safe_log2(this.word_set.size / arr[i])) * (arr[i] / this.word_set.size);
-    
+
         return arr.reduce((a, b) => a + b, 0) / arr.length;
     }
 
@@ -308,20 +335,20 @@ class Session {
 
             if (s_info != -1) {
                 //checks if value is already determined
-                if (s_info == 2 && letter[1] != 2) 
+                if (s_info == 2 && letter[1] != 2)
                     return false;
-                else if (s_info == 1 && letter[1] == 0) 
+                else if (s_info == 1 && letter[1] == 0)
                     return false;
-                else if (s_info == 0 && letter[1] != 0) 
+                else if (s_info == 0 && letter[1] != 0)
                     return false;
             }
 
             //checks if the word itself makes sense (most perms not plausible)
-            if (!map.has(letter[0])) 
+            if (!map.has(letter[0]))
                 map.set(letter[0], letter[1]);
-            else if (map.get(letter[0]) == 0 && letter[1] != 0) 
+            else if (map.get(letter[0]) == 0 && letter[1] != 0)
                 return false;
-            else if (map.get(letter[0]) != 0 && letter[1] == 0) 
+            else if (map.get(letter[0]) != 0 && letter[1] == 0)
                 return false;
         }
 
@@ -332,7 +359,7 @@ class Session {
     set_left(guess) {
         let left = new Set();
         this.word_set.forEach(word => {
-            if (this.parse_through_helper(guess, word)) 
+            if (this.parse_through_helper(guess, word))
                 left.add(word);
         });
         return left;
@@ -342,7 +369,7 @@ class Session {
     num_left(guess) {
         let count = 0;
         this.word_set.forEach(word => {
-            if (this.guess_valid(guess, word)) 
+            if (this.guess_valid(guess, word))
                 count++;
         });
         return count;
@@ -353,20 +380,20 @@ class Session {
         let has_all = true;
         //checks if word has all known letters
         this.letters.forEach(value => {
-            if (!word.includes(value)) 
+            if (!word.includes(value))
                 has_all = false;
         });
 
-        if (!has_all) 
+        if (!has_all)
             return false;
-        
+
 
         for (let i = 0; i < 5; i++) {
             //check if exact matches are maintained
-            if (guess[i][1] == 2 && word[i] != guess[i][0]) 
+            if (guess[i][1] == 2 && word[i] != guess[i][0])
                 return false;
             //check if the word contains a letter which is non-existant
-            if (this.session_info.get(word[i])[i] == 0) 
+            if (this.session_info.get(word[i])[i] == 0)
                 return false
         }
         return true;
@@ -377,7 +404,7 @@ class Session {
         for (let i = 0; i < 5; i++) {
             //only 1 if statement because all others are checked with removing words 
             //checks if a ruled out letter exists in the word
-            if (guess[i][1] == 0 && word.includes(guess[i][0])) 
+            if (guess[i][1] == 0 && word.includes(guess[i][0]))
                 return false;
         }
         return true;
