@@ -82,6 +82,8 @@ function simluation() {
         let choice = '';
         let count = 0;
         while (choice != chosen) {
+            count++;
+
             choice = session.best_words[0][0];
             let guess = [];
             for (let j = 0; j < 5; j++) {
@@ -96,6 +98,7 @@ function simluation() {
             session.guesses[session.level] = guess;
             session.next();
         }
+        arr[count] = arr[count] + 1;
     }
     console.log(arr);
 }
