@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#Everything Else
+init_w.txt
+init.txt
+no_weights.txt
+oweights.txt
+shortweights.txt
+test.txt
+total_list.txt
+wordle.py
+temp_tools.py
