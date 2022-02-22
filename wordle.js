@@ -11,11 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
     var session = new Session();
     setup();
     display();
-
-    simluation();
-    /* document.getElementById('maze-submit').addEventListener('click', () => {
-        setup();
-    }); */
 });
 
 window.addEventListener("keydown", function (event) {
@@ -73,69 +68,6 @@ function setup() {
     session = new Session();
 }
 
-function simluation() {
-    let arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    for(let i = 0; i < 100; i++) {
-        console.log(i);
-        let chosen = original_list[Math.floor(Math.random() * original_list.length)][0];
-        session = new Session();
-        let choice = '';
-        let count = 0;
-        while (choice != chosen) {
-            count++;
-
-            choice = session.best_words[0][0];
-            let guess = [];
-            for (let j = 0; j < 5; j++) {
-                if (choice[j] == chosen[j]) {
-                    guess.push([choice[j], 2]);
-                } else if (chosen.includes(choice[j])) {
-                    guess.push([choice[j], 1]);
-                } else {
-                    guess.push([choice[j], 0]);
-                }
-            }
-            session.guesses[session.level] = guess;
-            session.next();
-        }
-        arr[count] = arr[count] + 1;
-    }
-    console.log(arr);
-}
-
-function display() {
-    var canvas = document.getElementById('input-field');
-    if (canvas.getContext) {
-        let ctx = canvas.getContext('2d');
-
-        ctx.font = '55px sans-serif';
-
-        ctx.clearRect(0, 0, 1000, 1000);
-
-        //size of rectangle
-        let size = 92;
-        //size of margin between ^
-        let buffer = 10;
-        // arbitrary number formatting the drawing to center
-        let center_displacement = 50
-        for (let i = 0; i < 6; i++) {
-            for (let j = 0; j < 5; j++) {
-                // Color of wordle
-                ctx.fillStyle = colors[session.guesses[i][j][1] + 1];
-                ctx.fillRect(center_displacement + size * j + buffer * j, size * i + buffer * i, size, size);
-                //outline
-                ctx.strokeRect(center_displacement + size * j + buffer * j, size * i + buffer * i, size, size);
-                //reset color
-                ctx.fillStyle = '#000000';
-                //prints leter
-                ctx.textAlign = 'center';
-                ctx.fillText(session.guesses[i][j][0].toUpperCase(), center_displacement + size * j + buffer * (j + 4) + 4, size * (i + 1) + buffer * (i - 2) - 6);
-            }
-        }
-    }
-    //prints n best words
-    document.getElementById('word-list').innerHTML = list_to_html(session.get_top_n(50));
-}
 
 function list_to_html(array) {
     //table header
