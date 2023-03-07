@@ -19,3 +19,4 @@ To use the tool, just open the `index.html` file into any js capable browser (ch
 | 1           | Letter is misplaced         |
 | 2           | Letter is correctly Placed  |
 
+*GUI doesnt work on moble | will vary with non-16:9 aspect screens
